@@ -1,0 +1,30 @@
+from django.urls import path, include
+from . import views
+
+urlpatterns = [
+    path('', views.athletes, name="athletes"),
+    path('athlete/<str:num>/', views.athlete, name="athlete"),
+    path('group/<str:num>/', views.group, name="group"),
+    path('event/<str:num>/', views.event, name="event"),
+    path('create-athlete/', views.createAthlete, name="create-athlete"),
+    path('update-athlete/<str:num>/', views.updateAthlete, name="update-athlete"),
+    path('delete-athlete/<str:num>', views.deleteAthlete, name="delete-athlete"),
+    path('create-group/', views.createGroup, name="create-group"),
+    path('update-group/<str:num>/', views.updateGroup, name="update-group"),
+    path('delete-group/<str:num>/', views.deleteGroup, name="delete-group"),
+    path('create-event/', views.createEvent, name="create-event"),
+    path('update-event/<str:num>/', views.updateEvent, name="update-event"),
+    path('delete-event/<str:num>/', views.deleteEvent, name="delete-event"),
+    path('athlete-to-event/', views.athleteEventSignup, name="athlete-event-signup"),
+    path('create-classtime/<str:num>/', views.createClassTime, name="create-classtime"),
+    path('update-classtime/<str:num>/<str:num2>/', views.updateClassTime, name="update-classtime"),
+    path('delete-classtime/<str:num>/<str:num2>/', views.deleteClassTime, name="delete-classtime"),
+    path('selfattendance/<str:num>/<str:num2>/', views.selfattendance, name='self-attendance'),
+    path('groupattendance/<str:num>/<str:num2>/', views.groupattendance, name='group-attendance'),
+    path('update-attendance/<str:num>/<str:num2>/<str:num3>/', views.updateattendance, name="update-attendance"),
+    path('delete-attendance/<str:num>/<str:num2>/<str:num3>/', views.deleteattendance, name="delete-attendance"),
+    path('attendance/', views.attendance, name='attendance'),
+    path('signup', views.signup, name='signup'),
+    #path('signup/athlete/', views.AthleteSignUpView.as_view(), name='athlete-signup'),
+    #path('signup/coach/', views.CoachSignUpView.as_view(), name='coach-signup'),
+]

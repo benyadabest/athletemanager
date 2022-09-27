@@ -1,0 +1,9 @@
+from django.contrib import admin
+from .models import Athlete, Groups, Event, Eventsignup, ClassTime, Attendance
+# Register your models here.
+admin.site.register(Athlete)
+admin.site.register(Groups)
+admin.site.register(Event)
+admin.site.register(Eventsignup)
+admin.site.register(ClassTime)
+admin.site.register(Attendance)

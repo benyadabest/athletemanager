@@ -1,0 +1,35 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
+
+<br>
+<h2>Group: {{event.name}}</h2>
+<img src="{{event.barcode.url}}" default="">
+
+<br>
+<br>
+
+<h4>Athletes Signed up for the Event</h4>
+<form action="" method="GET">
+    {{filter.form}}
+    <button type="submit">Search</button>
+</form>
+<ul>
+    {% for athlete in eventsignups %}
+    <li><a href="{% url 'athlete' athlete.id %}">{{athlete.athlete}}</a> -- {{athlete.transportation}}</li>
+    <hr>
+    {% endfor %}
+</ul>
+
+<br>
+<br>
+
+<a href="{% url 'athlete-event-signup' %}">Add Athlete To Event</a>
+
+
+
+
+
+
+{% endblock content %}
