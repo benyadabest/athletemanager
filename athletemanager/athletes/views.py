@@ -1,19 +1,63 @@
 from asyncio import events
 from inspect import Attribute
 import datetime
-from django.contrib.auth import login
+import logging
+from .decorators import *
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import login as auth_login, authenticate
+from django.contrib.auth import logout as django_logout
 from django.shortcuts import render, redirect
-from .models import Athlete, Groups, Event, Eventsignup, ClassTime, Attendance
-from .forms import AthleteForm, GroupForm, EventForm, AthleteEventForm, ClassTimeForm, AttendanceForm, AttendanceForm2 #AthleteSignUpForm, CoachSignUpForm,
+from .models import User, Athlete, Groups, Event, Eventsignup, ClassTime, Attendance
+from .forms import AthleteForm, GroupForm, EventForm, AthleteEventForm, ClassTimeForm, AttendanceForm, AttendanceForm2, AthleteSignUpForm, CoachSignUpForm
 from .filters import AthleteFilter, paginateAthletes, EventsignupFilter, AttendanceFilter
 from django.views.generic import CreateView
 
+def home(request):
+    if request.user.is_authenticated:
+        if request.user.is_coach:
+            return redirect('athletes')
+        else:
+            try:
+                a = get_object_or_404(Athlete.objects.get(user=request.user))
+                return redirect('profile', a.id)
+            except:
+                return redirect('logout')
+    return render(request, 'athletes/home.html')
 
+def login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username= form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(username=username, password=password)
+            auth_login(request, user)
+            messages.info(request, f'You are now logged in as {username}!')
+            a = Athlete.objects.get(user=request.user)
+            return redirect('profile', a.id)
+        else:
+            messages.error(request, 'Invalid username or password')
+
+    form = AuthenticationForm()
+    context = {'form':form}
+    return render(request, 'athletes/login.html', context)
+
+@login_required
+def logout(request):
+    django_logout(request)
+    messages.info(request, 'Successfully logged out!')
+    return redirect('home')
+
+@login_required
+@coach_required
 def athletes(request):
     athletes = Athlete.objects.all()
     groups = Groups.objects.all()
     events = Event.objects.all()
-
+    
     attendance = []
     for a in athletes:
         attendance.append((a.attendance(), a.name(), a.get_present(), a.get_late(), a.get_absent(), a.id))
@@ -32,6 +76,8 @@ def athletes(request):
     context = {'athletes': athletes, 'groups': groups, 'events': events, 'filter': myFilter, 'custom_range': custom_range, 'custom_range2': custom_range2, 'attendance': attendance}
     return render(request, 'athletes/athletes.html', context)
 
+@login_required
+@coach_required
 def attendance(request):
     attendance = Attendance.objects.all()
 
@@ -43,12 +89,16 @@ def attendance(request):
     context = {'attendance': attendance, 'filter': myFilter, 'custom_range': custom_range}
     return render(request, 'athletes/attendance.html', context)
 
+@login_required
+@coach_required
 def group(request, num):
     group = Groups.objects.get(id=num)
     athletes = Athlete.objects.filter(group=group)
     context = {'group': group, 'athletes': athletes,}
     return render(request, 'athletes/group.html', context)
 
+@login_required
+@coach_required
 def event(request, num):
     event = Event.objects.get(id=num)
     eventsignups = Eventsignup.objects.filter(event=event)
@@ -59,11 +109,15 @@ def event(request, num):
     context = {'event': event, 'eventsignups':eventsignups, 'filter': myFilter}
     return render(request, 'athletes/event.html', context)
 
+@login_required
+@coach_required
 def athlete(request, num):
     athlete = Athlete.objects.get(id=num)
     context = {'athlete': athlete}
     return render(request, 'athletes/athlete.html', context)
 
+@login_required
+@coach_required
 def selfattendance(request, num, num2):
     classtime = ClassTime.objects.get(id=num)
     group = Groups.objects.get(id=num2)
@@ -89,6 +143,8 @@ def selfattendance(request, num, num2):
     context = {'form': form}
     return render(request, 'athletes/attendance_form.html', context)
 
+@login_required
+@coach_required
 def groupattendance(request, num, num2):
     classtime = ClassTime.objects.get(id=num)
     group = Groups.objects.get(id=num2)
@@ -98,6 +154,8 @@ def groupattendance(request, num, num2):
 
     return render(request, 'athletes/groupattendance.html', context)
 
+@login_required
+@coach_required
 def updateattendance(request, num, num2, num3):
     att = Attendance.objects.get(id=num3)
     data = {'mark_attendance': att.mark_attendance} #'athlete_id': att.athlete_id, 'group': att.group, 'classtime': att.classtime,
@@ -118,6 +176,8 @@ def updateattendance(request, num, num2, num3):
     context = {'form': form}
     return render(request, 'athletes/attendance_form.html', context)
 
+@login_required
+@coach_required
 def deleteattendance(request, num, num2, num3):
     attendance = ClassTime.objects.get(id=num3)
 
@@ -128,6 +188,8 @@ def deleteattendance(request, num, num2, num3):
     context = {'object': attendance}
     return render(request, 'athletes/delete.html', context)
 
+@login_required
+@coach_required
 def createClassTime(request, num):
     group = Groups.objects.get(id=num)
     form = ClassTimeForm()
@@ -148,6 +210,8 @@ def createClassTime(request, num):
     context = {'form': form}
     return render(request, 'athletes/classtime_form.html', context)
     
+@login_required
+@coach_required
 def updateClassTime(request, num, num2):
     classtime = ClassTime.objects.get(id=num)
     form = AthleteForm(instance=athlete)
@@ -161,6 +225,8 @@ def updateClassTime(request, num, num2):
     context = {'form': form}
     return render(request, 'athletes/classtime_form.html', context)
 
+@login_required
+@coach_required
 def deleteClassTime(request, num, num2):
     classtime = ClassTime.objects.get(id=num)
 
@@ -171,6 +237,8 @@ def deleteClassTime(request, num, num2):
     context = {'object': classtime}
     return render(request, 'athletes/delete.html', context)
 
+@login_required
+@coach_required
 def createAthlete(request):
     form = AthleteForm()
 
@@ -183,6 +251,8 @@ def createAthlete(request):
     context = {'form': form}
     return render(request, 'athletes/athlete_form.html', context)
 
+@login_required
+@coach_required
 def updateAthlete(request, num):
     athlete = Athlete.objects.get(id=num)
     form = AthleteForm(instance=athlete)
@@ -196,6 +266,8 @@ def updateAthlete(request, num):
     context = {'form': form}
     return render(request, 'athletes/athlete_form.html', context)
 
+@login_required
+@coach_required
 def deleteAthlete(request, num):
     athlete = Athlete.objects.get(id=num)
 
@@ -206,6 +278,8 @@ def deleteAthlete(request, num):
     context = {'object': athlete.name}
     return render(request, 'athletes/delete.html', context)
 
+@login_required
+@coach_required
 def createGroup(request):
     form = GroupForm()
 
@@ -218,6 +292,8 @@ def createGroup(request):
     context = {'form': form}
     return render(request, 'athletes/group_form.html', context)
 
+@login_required
+@coach_required
 def updateGroup(request, num):
     group = Groups.objects.get(id=num)
     form = GroupForm(instance=group)
@@ -231,6 +307,8 @@ def updateGroup(request, num):
     context = {'form': form}
     return render(request, 'athletes/group_form.html', context)
 
+@login_required
+@coach_required
 def deleteGroup(request, num):
     group = Groups.objects.get(id=num)
 
@@ -241,6 +319,8 @@ def deleteGroup(request, num):
     context = {'object': group.name}
     return render(request, 'athletes/delete.html', context)
 
+@login_required
+@coach_required
 def createEvent(request):
     form = EventForm()
 
@@ -253,6 +333,8 @@ def createEvent(request):
     context = {'form': form}
     return render(request, 'athletes/event_form.html', context)
 
+@login_required
+@coach_required
 def updateEvent(request, num):
     event = Event.objects.get(id=num)
     form = EventForm(instance=event)
@@ -266,6 +348,8 @@ def updateEvent(request, num):
     context = {'form': form}
     return render(request, 'athletes/event_form.html', context)
 
+@login_required
+@coach_required
 def deleteEvent(request, num):
     event = Event.objects.get(id=num)
 
@@ -276,6 +360,8 @@ def deleteEvent(request, num):
     context = {'object': event.name}
     return render(request, 'athletes/delete.html', context)
 
+@login_required
+@coach_required
 def athleteEventSignup(request):
     form = AthleteEventForm()
 
@@ -288,33 +374,58 @@ def athleteEventSignup(request):
     context = {'form': form}
     return render(request, 'athletes/athleteEvent_form.html', context)
 
+@login_required
+def profile(request, num):
+    a = Athlete.objects.get(id=num)
+    context = {'athlete': a}
+    return render(request, 'athletes/profile.html', context)
+
+@login_required
+def updateprofile(request, num):
+    athlete = Athlete.objects.get(id=num)
+    form = AthleteForm(instance=athlete)
+
+    if request.method == 'POST':
+        form = AthleteForm(request.POST, request.FILES, instance=athlete)
+        if form.is_valid():
+            form.save()
+            return redirect('profile', num)
+            
+    context = {'form': form}
+    return render(request, 'athletes/athlete_form.html', context)
+
 def signup(request):
     return render(request, 'athletes/signup.html')
 
-# class AthleteSignUpView(CreateView):
-#     model = User
-#     form_class = AthleteSignUpForm
-#     template_name = 'users/signup_form.html'
 
-#     def get_context_data(self, **kwargs):
-#         kwargs['user_type'] = 'athlete'
-#         return super().get_context_data(**kwargs)
+class AthleteSignUpView(CreateView):
+    model = User
+    form_class = AthleteSignUpForm
+    template_name = 'athletes/signup_form.html'
+    redirect_field_name = 'next'
 
-#     def form_valid(self, form):
-#         user = form.save()
-#         login(self.request, user)
-#         return redirect('profile')
+    def get_context_data(self, **kwargs):
+        kwargs['user_type'] = 'athlete'
+        return super().get_context_data(**kwargs)
 
-# class CoachSignUpView(CreateView):
-#     model = User
-#     form_class = CoachSignUpForm
-#     template_name = 'users/signup_form.html'
+    def form_valid(self, form):
+        user = form.save()
+        auth_login(self.request, user)
+        a = Athlete.objects.get(user=user)
+        return redirect('profile', a.id)
 
-#     def get_context_data(self, **kwargs):
-#         kwargs['user_type'] = 'coach'
-#         return super().get_context_data(**kwargs)
+class CoachSignUpView(CreateView):
+    model = User
+    form_class = CoachSignUpForm
+    template_name = 'athletes/signup_form.html'
+    redirect_field_name = 'next'
 
-#     def form_valid(self, form):
-#         user = form.save()
-#         login(self.request, user)
-#         return redirect('athletes')
+    def get_context_data(self, **kwargs):
+        kwargs['user_type'] = 'coach'
+        return super().get_context_data(**kwargs)
+
+    def form_valid(self, form):
+        user = form.save()
+        auth_login(self.request, user)
+        #a = Athlete.objects.get(user=user)
+        return redirect('athletes')

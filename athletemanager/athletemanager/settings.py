@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     'athletes.apps.AthletesConfig',
     'django_filters',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -131,4 +132,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#AUTH_USER_MODEL = 'athletes.User'
+AUTH_USER_MODEL = 'athletes.User'
+
+LOGIN_REDIRECT_URL = "home"
+LOGIN_REDIRECT_URL = "home"
+

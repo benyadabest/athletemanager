@@ -12,6 +12,21 @@ from django.core.files import File
 import datetime
 
 # Create your models here.
+class User(AbstractUser):
+    #     # class Role(models.TextChoices):
+#     #     COACH = "COACH", 'Coach'
+#     #     ATHLETE = "ATHLETE", 'Athlete'
+
+#     # base_role = Role.COACH
+#     # role = models.CharField(max_length=50, choices=Role.choices)
+
+#     # def save(self, *args, **kwargs):
+#     #     if not self.pk:
+#     #         self.role = self.base_role
+#     #         return super().save(*args, **kwargs)
+
+    is_athlete = models.BooleanField(default=False)
+    is_coach = models.BooleanField(default=False)
 
 class Event(models.Model):
     id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
@@ -77,35 +92,19 @@ class Groups(models.Model):
             return super()
 
 
-# class User(AbstractUser):
-#     # class Role(models.TextChoices):
-#     #     COACH = "COACH", 'Coach'
-#     #     ATHLETE = "ATHLETE", 'Athlete'
-
-#     # base_role = Role.COACH
-#     # role = models.CharField(max_length=50, choices=Role.choices)
-
-#     # def save(self, *args, **kwargs):
-#     #     if not self.pk:
-#     #         self.role = self.base_role
-#     #         return super().save(*args, **kwargs)
-
-#     is_athlete = models.BooleanField(default=False)
-#     is_coach = models.BooleanField(default=False)
-
 class Athlete(models.Model):
-    #user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE, default='')
     group = models.ForeignKey(Groups, on_delete=models.CASCADE, null=True, blank=True)
     events = models.ManyToManyField(Event, blank=True)
     delete_flag = models.IntegerField(default = 0)
     first_name = models.CharField(max_length=250)
     last_name = models.CharField(max_length=250)
     address = models.TextField(blank=True, null= True)
-    dob = models.DateField()
+    dob = models.DateField(blank=True, null=True)
     year = models.IntegerField(default=0)
     phonenumber = models.CharField(max_length=12)
     weight = models.IntegerField(default=0)
-    email = models.CharField(max_length=250, unique=True)
+    email = models.CharField(max_length=250)
     gender = models.CharField(max_length=20, choices=(('Male','Male'), ('Female','Female')), default = "Male")
     usaw = models.ImageField(upload_to="", null=True, blank=True, default="")
     school = models.CharField(max_length=250)
@@ -114,7 +113,7 @@ class Athlete(models.Model):
     gpa = models.DecimalField(default=2.0, decimal_places=2, max_digits=3)
     transcript = models.ImageField(upload_to="", null=True, blank=True, default="")
     goals = models.CharField(max_length=400, blank=True, null=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, primary_key=True)
+    id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     barcode = models.ImageField(upload_to='barcodes/', blank=True, default="")
 
     def get_present(self):
