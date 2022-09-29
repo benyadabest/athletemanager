@@ -11,7 +11,7 @@ from django.contrib.auth import login as auth_login, authenticate
 from django.contrib.auth import logout as django_logout
 from django.shortcuts import render, redirect
 from .models import User, Athlete, Groups, Event, Eventsignup, ClassTime, Attendance
-from .forms import AthleteForm, GroupForm, EventForm, AthleteEventForm, ClassTimeForm, AttendanceForm, AttendanceForm2, AthleteSignUpForm, CoachSignUpForm
+from .forms import AthleteForm, GroupForm, EventForm, AthleteEventForm, ClassTimeForm, AttendanceForm, AttendanceForm2, AthleteSignUpForm, CoachSignUpForm, AthleteEventForm2
 from .filters import AthleteFilter, paginateAthletes, EventsignupFilter, AttendanceFilter
 from django.views.generic import CreateView
 
@@ -21,8 +21,7 @@ def home(request):
             return redirect('athletes')
         else:
             try:
-                a = get_object_or_404(Athlete.objects.get(user=request.user))
-                return redirect('profile', a.id)
+                return redirect('profile', request.user.id)
             except:
                 return redirect('logout')
     return render(request, 'athletes/home.html')
@@ -36,8 +35,7 @@ def login(request):
             user = authenticate(username=username, password=password)
             auth_login(request, user)
             messages.info(request, f'You are now logged in as {username}!')
-            a = Athlete.objects.get(user=request.user)
-            return redirect('profile', a.id)
+            return redirect('profile', request.user.id)
         else:
             messages.error(request, 'Invalid username or password')
 
@@ -54,7 +52,8 @@ def logout(request):
 @login_required
 @coach_required
 def athletes(request):
-    athletes = Athlete.objects.all()
+    group = Groups.objects.get(name='Coaches')
+    athletes = Athlete.objects.exclude(group=group)
     groups = Groups.objects.all()
     events = Event.objects.all()
     
@@ -113,7 +112,8 @@ def event(request, num):
 @coach_required
 def athlete(request, num):
     athlete = Athlete.objects.get(id=num)
-    context = {'athlete': athlete}
+    events = Eventsignup.objects.filter(athlete=athlete)
+    context = {'athlete': athlete, 'events':events}
     return render(request, 'athletes/athlete.html', context)
 
 @login_required
@@ -142,6 +142,13 @@ def selfattendance(request, num, num2):
 
     context = {'form': form}
     return render(request, 'athletes/attendance_form.html', context)
+
+@login_required
+@athlete_required
+def events(request):
+    events = Event.objects.all()
+    context = {'events': events}
+    return render(request, 'athletes/events.html', context)
 
 @login_required
 @coach_required
@@ -375,14 +382,66 @@ def athleteEventSignup(request):
     return render(request, 'athletes/athleteEvent_form.html', context)
 
 @login_required
+@coach_required
+def updateathleteEventSignup(request, num, num2):
+    event = Event.objects.get(id=num)
+    athlete = Athlete.objects.get(id=num2)
+    ae = Eventsignup.objects.get(event=event, athlete=athlete)
+    form = AthleteEventForm(instance=ae)
+
+    if request.method == 'POST':
+        form = AthleteEventForm(request.POST, instance=ae)
+        if form.is_valid():
+            form.save()
+            return redirect('athletes')
+            
+    context = {'form': form}
+    return render(request, 'athletes/athleteEvent_form.html', context)
+
+@login_required
+@coach_required
+def deleteathleteEventSignup(request, num, num2):
+    event = Event.objects.get(id=num)
+    athlete = Athlete.objects.get(id=num2)
+    ae = Eventsignup.objects.get(event=event, athlete=athlete)
+
+    if request.method == 'POST':
+        ae.delete()
+        return redirect('athletes')
+
+    context = {'object': ae}
+    return render(request, 'athletes/delete.html', context)
+
+@login_required
+@athlete_required
+def athleteEventSignup2(request, num):
+    user = User.objects.get(id=num)
+    athlete = Athlete.objects.get(user=user)
+    form = AthleteEventForm2()
+
+    if request.method == 'POST':
+        form = AthleteEventForm2(request.POST)
+        if form.is_valid():
+            ae = form.save(commit=False)
+            ae = Eventsignup(athlete=athlete, event=form.cleaned_data['event'], transportation=form.cleaned_data['transportation'])
+            ae.save()
+            return redirect('profile', num)
+
+    context = {'form': form}
+    return render(request, 'athletes/athleteEvent_form.html', context)
+
+@login_required
 def profile(request, num):
-    a = Athlete.objects.get(id=num)
-    context = {'athlete': a}
+    user = User.objects.get(id=num)
+    a = Athlete.objects.get(user=user)
+    events = Eventsignup.objects.filter(athlete=a)
+    context = {'athlete': a, 'events':events}
     return render(request, 'athletes/profile.html', context)
 
 @login_required
 def updateprofile(request, num):
-    athlete = Athlete.objects.get(id=num)
+    user = User.objects.get(id=num)
+    athlete = Athlete.objects.get(user=user)
     form = AthleteForm(instance=athlete)
 
     if request.method == 'POST':

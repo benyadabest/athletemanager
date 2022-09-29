@@ -29,6 +29,9 @@ class User(AbstractUser):
     is_coach = models.BooleanField(default=False)
 
 class Event(models.Model):
+    stripe_product_id = models.CharField(max_length=100, default='')
+    stripe_price_id = models.CharField(max_length=100, default='')
+    price = models.IntegerField(default=0)
     id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
     name = models.CharField(max_length=250, unique=True)
     location = models.CharField(max_length=250, blank=True, null=True)
@@ -172,10 +175,14 @@ class Athlete(models.Model):
             return super()
 
 class Eventsignup(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
     transportOptions = [('Team', 'Travel with the Team'), ('Parents', 'Travel with Parents')]
+    #paymentOptions = [('Stripe', 'Pay Online'), ('Cash', 'Pay with Cash')]
     athlete = models.ForeignKey(Athlete, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    paid = models.BooleanField(default=False)
     transportation = models.CharField(max_length=250, choices = transportOptions)
+    #payment = models.CharField(max_length=250, choices=paymentOptions)
 
     def __str__(self):
         name = str(self.event) + "_" + str(self.athlete)

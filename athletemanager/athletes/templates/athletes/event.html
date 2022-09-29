@@ -4,7 +4,7 @@
 {% block content %}
 
 <br>
-<h2>Group: {{event.name}}</h2>
+<h2>Event: {{event.name}}</h2>
 <img src="{{event.barcode.url}}" default="">
 
 <br>
@@ -17,7 +17,7 @@
 </form>
 <ul>
     {% for athlete in eventsignups %}
-    <li><a href="{% url 'athlete' athlete.id %}">{{athlete.athlete}}</a> -- {{athlete.transportation}}</li>
+    <li><a href="{% url 'athlete' athlete.athlete.id %}">{{athlete.athlete}}</a> -- {{athlete.transportation}} -- <a href="{% url 'update-athlete-to-event' event.id athlete.athlete.id %}">Update Info</a> -- <a href="{% url 'delete-athlete-to-event' event.id athlete.athlete.id %}">Delete Instance</a></li>
     <hr>
     {% endfor %}
 </ul>

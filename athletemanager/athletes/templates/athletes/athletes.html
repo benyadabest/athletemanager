@@ -15,9 +15,10 @@
 <br>
 
 <h1>Events:</h1>
+<a href="{% url 'athlete-event-signup' %}">Add Athlete To Event</a>
 <ul>
     {% for event in events %}
-    <li><a href="{% url 'event' event.id %}">{{event.name}}</a> -- {{event.location}} -- {{event.date_start}} -- {{event.date_end}} -- {{event.description}} -- <a href="{% url 'athlete-event-signup' %}">Add Athlete To Event</a> -- <a href="{% url 'update-event' event.id %}">Update Info</a> -- <a href="{% url 'delete-event' event.id %}">Delete Event</a></a></li>
+    <li><a href="{% url 'event' event.id %}">{{event.name}}</a> -- {{event.location}} -- {{event.date_start}} -- {{event.date_end}} -- {{event.description}} -- <a href="{% url 'update-event' event.id %}">Update Info</a> -- <a href="{% url 'delete-event' event.id %}">Delete Event</a></a></li>
     <hr>
     {% endfor %}
 </ul>

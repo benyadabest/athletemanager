@@ -31,6 +31,11 @@ class AthleteEventForm(ModelForm):
         model = Eventsignup
         fields = ['athlete', 'event', 'transportation']
 
+class AthleteEventForm2(ModelForm):
+    class Meta:
+        model = Eventsignup
+        fields = ['event', 'transportation']
+
 class ClassTimeForm(ModelForm):
     class Meta:
         model = ClassTime

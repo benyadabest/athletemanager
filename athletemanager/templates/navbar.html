@@ -9,7 +9,12 @@
 <a href="{% url 'create-event' %}">Add-Event</a>
 {% endif %}
 
+{% if user.is_athlete %}
+<a href="{% url 'events' %}">Events</a>
+{% endif %}
+
 {% if user.is_authenticated %}
+<a href="{% url 'profile' user.id %}">Profile</a>
 <a href="{% url 'logout' %}">LogOut</a>
 <h4>Welcome {{user.username}}</h4>
 {% endif %}
